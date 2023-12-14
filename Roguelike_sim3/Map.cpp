@@ -174,7 +174,6 @@ void Maze::generation() {
 	elev_ind = 46 + (rand() % 45);
 	carg_ind = 91 + (rand() % 45);
 	com_ind = 136 + (rand() % 45);
-	lab_ind = 181 + (rand() % 45);
 
 	grid[elev_ind].elev = true;
 	grid[elev_ind].indent = 1;
