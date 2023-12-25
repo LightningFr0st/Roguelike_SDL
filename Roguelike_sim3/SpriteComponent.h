@@ -1,6 +1,7 @@
 #pragma once
 #include "Components.h"
 #include "TextureManager.h"
+#include "ColliderComponent.h"
 #include "SDL.h"
 #include "Animation.h"
 #include <map>
@@ -17,6 +18,7 @@ private:
 	int speed = 100;
 
 public:
+	std::string name;
 
 	int animIndex = 0;
 	std::map<const char*, Animation> animations;
@@ -28,12 +30,40 @@ public:
 	}
 	SpriteComponent(const char* path, bool isAnimated) {
 		animated = isAnimated;
-		Animation idle = Animation(0, 3, 300);
-		Animation walk = Animation(1, 8, 100);
-
+		Animation idle, walk;
+		if (name == "player") {
+			idle = Animation(0, 10, 300);
+			walk = Animation(1, 10, 100);
+			
+		}
+		else {
+			idle = Animation(0, 4, 300);
+			walk = Animation(1, 8, 100);
+		}
 		animations.emplace("Idle", idle);
 		animations.emplace("Walk", walk);
 
+		Play("Idle");
+
+		setTex(path);
+	}
+
+	SpriteComponent(const char* path, bool isAnimated, std::string p_name) {
+		name = p_name;
+		animated = isAnimated;
+		Animation idle, walk, attack;
+		if (name == "player") {
+			idle = Animation(0, 10, 100);
+			walk = Animation(1, 10, 100);
+			attack = Animation(2, 4, 100);
+		}
+		else {
+			idle = Animation(0, 3, 300);
+			walk = Animation(1, 8, 100);
+		}
+		animations.emplace("Idle", idle);
+		animations.emplace("Walk", walk);
+		animations.emplace("Attack", attack);
 		Play("Idle");
 
 		setTex(path);
@@ -47,7 +77,6 @@ public:
 		srcRect.x = srcRect.y = 0;
 		srcRect.w = transform->width;
 		srcRect.h = transform->height;
-
 	}
 
 	void setTex(const char* path) {
@@ -63,11 +92,26 @@ public:
 		destRect.x = static_cast<int>(transform->position.x) - Game::camera.x;
 		destRect.y = static_cast<int>(transform->position.y) - Game::camera.y;
 		destRect.w = transform->width * transform->scale;
-		destRect.h = transform->height * transform->scale;;
+		destRect.h = transform->height * transform->scale;
 	}
 
 	void draw() override {
-		TextureManager::Draw(texture, srcRect, destRect, spriteflip);
+		if (animated) {
+			if (animIndex == 2) {
+				SDL_Rect tsrcRect = srcRect;
+				SDL_Rect tdestRect = destRect;
+				tsrcRect.x *= 2;
+				tsrcRect.w = 64;
+				tdestRect.w *= 2;
+				TextureManager::Draw(texture, tsrcRect, tdestRect, spriteflip);
+			}
+			else {
+				TextureManager::Draw(texture, srcRect, destRect, spriteflip);
+			}
+		}
+		else {
+			TextureManager::Draw(texture, srcRect, destRect, spriteflip);
+		}
 	}
 
 	void Play(const char* animName) {

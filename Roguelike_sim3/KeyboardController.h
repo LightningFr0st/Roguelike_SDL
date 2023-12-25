@@ -6,6 +6,7 @@ class KeyboardController : public Component {
 public:
 	TransformComponent* transform;
 	SpriteComponent* sprite;
+
 	void init() override {
 		transform = &entity->getComponent<TransformComponent>();
 		sprite = &entity->getComponent<SpriteComponent>();

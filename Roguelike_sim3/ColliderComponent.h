@@ -4,6 +4,10 @@
 #include "Components.h"
 #include "TextureManager.h"
 
+#define HORIZONTAL 1
+#define VERTICAL 2
+#define NONE 3
+
 class ColliderComponent : public Component {
 public:
 	SDL_Rect collider;
@@ -11,8 +15,7 @@ public:
 
 	bool visible = true;
 
-	int typeofWall;
-
+	int direction = NONE;
 
 	SDL_Texture* tex;
 	SDL_Rect srcRect, dstRect;
@@ -31,14 +34,13 @@ public:
 		collider.h = collider.w = size;
 	}
 
-	ColliderComponent(std::string t, int xpos, int ypos, int p_w, int p_h, int type) {
+	ColliderComponent(std::string t, int xpos, int ypos, int p_w, int p_h, int dir) {
 		tag = t;
 		collider.x = xpos;
 		collider.y = ypos;
 		collider.h = p_h;
 		collider.w = p_w;
-
-		typeofWall = type;
+		direction = dir;
 	}
 
 	void init() override {
@@ -46,31 +48,33 @@ public:
 			entity->addComponent<TransformComponent>();
 		}
 		transform = &entity->getComponent<TransformComponent>();
-
-		if (visible) {
-			switch (typeofWall) {
-			case 1:
-				tex = TextureManager::LoadTexture("assets/ColTex1.png");
-				break;
-			case 2:
+		if (direction != NONE) {
+			switch (direction) {
+			case HORIZONTAL:
 				tex = TextureManager::LoadTexture("assets/ColTex2.png");
 				break;
-			case 3:
-				tex = TextureManager::LoadTexture("assets/ColTex3.png");
-				break;
-			case 4:
-				tex = TextureManager::LoadTexture("assets/ColTex4.png");
+			case VERTICAL:
+				tex = TextureManager::LoadTexture("assets/ColTex1.png");
 				break;
 			}
 		}
-
+		else {
+			if (tag == "sword") {
+				tex = TextureManager::LoadTexture("assets/sword.png");
+			}
+			else {
+				tex = TextureManager::LoadTexture("assets/map.png");
+			}
+		}
+		
+		
 		srcRect = { 0,0,32,32 };
 		dstRect = { collider.x, collider.y, collider.w, collider.h };
 
 	}
 
 	void update() override {
-		if (tag != "terrain" && tag != "elev" && tag != "ladd") {
+		if (tag != "terrain" && tag != "ladder" && tag != "sword" && tag != "map") {
 			collider.x = static_cast<int>(transform->position.x);
 			collider.y = static_cast<int>(transform->position.y);
 			collider.w = static_cast<int>(transform->width * transform->scale);

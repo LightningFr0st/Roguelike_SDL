@@ -12,6 +12,10 @@
 
 extern Manager manager;
 
+//
+// Map implementation
+//
+
 Map::Map(const char* mapfile, int mscale, int tilesize) :mapfilePath(mapfile), mapScale(mscale), tileSize(tilesize) {
 	scaledSize = mscale * tilesize;
 }
@@ -20,60 +24,63 @@ Map::~Map() {
 
 }
 
-void Map::LoadMap(std::string path, int sizeX, int sizeY, int p_level) {
-	level = p_level;
-	char c;
-	std::fstream mapFile;
-	mapFile.open(path);
+void Map::LoadMap(int sizeX, int sizeY) {
 
-	int srcX, srcY;
+	int srcX;
 	for (int y = 0; y < sizeY; y++) {
 		for (int x = 0; x < sizeX; x++) {
-			int index = maze_map.getInd(y, x);
-			srcX = maze_map.grid[index].indent * tileSize;
+			int index = maze_map->getInd(y, x);
+			srcX = maze_map->grid[index].indent * tileSize;
 			AddTile(srcX, 0, x * scaledSize, y * scaledSize);
-			if (maze_map.grid[index].indent == 1) {
+			if (maze_map->grid[index].right) {
 				auto& tcol(manager.addEntity());
-				tcol.addComponent<ColliderComponent>
+				tcol.addComponent<ColliderComponent>("terrain", (x + 1) * scaledSize, y * scaledSize, scaledSize / 5, scaledSize, VERTICAL);
+				tcol.addGroup(Game::groupColliders);
+			}
+			if (maze_map->grid[index].bottom) {
+				auto& tcol(manager.addEntity());
+				tcol.addComponent<ColliderComponent>("terrain", x * scaledSize, (y + 1) * scaledSize, scaledSize + scaledSize / 5, scaledSize / 5, HORIZONTAL);
+				tcol.addGroup(Game::groupColliders);
+			}
+			if (x == 0) {
+				auto& tcol(manager.addEntity());
+				tcol.addComponent<ColliderComponent>("terrain", x * scaledSize, y * scaledSize, scaledSize / 5, scaledSize, VERTICAL);
+				tcol.addGroup(Game::groupColliders);
+			}
+			if (y == 0) {
+				auto& tcol(manager.addEntity());
+				tcol.addComponent<ColliderComponent>("terrain", x * scaledSize, y * scaledSize, scaledSize + scaledSize / 5, scaledSize / 5, HORIZONTAL);
+				tcol.addGroup(Game::groupColliders);
+			}
+
+			if (maze_map->grid[index].lad ) {
+				auto& tcol(manager.addEntity());
+				tcol.addComponent<ColliderComponent>("ladder", x * scaledSize, y * scaledSize, scaledSize);
+				tcol.addGroup(Game::groupColliders);
+			}
+			else if (maze_map->grid[index].sword) {
+				auto& tcol(manager.addEntity());
+				tcol.addComponent<ColliderComponent>("sword", x * scaledSize + 32, y * scaledSize + 32, 64, 64, NONE);
+				tcol.addGroup(Game::groupColliders);
+			}
+			else if (maze_map->grid[index].map) {
+				auto& tcol(manager.addEntity());
+				tcol.addComponent<ColliderComponent>("map", x * scaledSize + 32, y * scaledSize + 32, 64, 64, NONE);
+				tcol.addGroup(Game::groupColliders);
 			}
 		}
 	}
+}
 
-	for (int y = 0; y < sizeY; y++) {
-		for (int x = 0; x < sizeX; x++) {
-			mapFile.get(c);
-			srcX = atoi(&c) * tileSize;
-			AddTile(srcX, 0, x * scaledSize, y * scaledSize);
-			if (srcX / tileSize == 1) {
-				auto& tcol(manager.addEntity());
-				tcol.addComponent<ColliderComponent>("elev", x * scaledSize, y * scaledSize, scaledSize);
-				tcol.addGroup(Game::groupColliders);
-			}
-			mapFile.ignore();
-		}
+void Map::LoadPath() {
+	int srcX = 2 * tileSize;
+
+	for (int i = 0; i < maze_map->escape.size() - 1; i++) {
+		int curNode = maze_map->escape[i];
+		auto& tile(manager.addEntity());
+		tile.addComponent<TileComponent>(srcX, 0, maze_map->grid[curNode].j * scaledSize + 32, maze_map->grid[curNode].i * scaledSize + 32, 32, 2, mapfilePath);
+		tile.addGroup(Game::groupPath);
 	}
-
-	mapFile.ignore();
-
-	for (int y = -1; y < sizeY; y++) {
-		for (int x = -1; x < sizeX; x++) {
-			mapFile.get(c);
-			if (c == '1') {
-				auto& tcol(manager.addEntity());
-				tcol.addComponent<ColliderComponent>("terrain", (x + 1) * scaledSize, y * scaledSize, scaledSize / 5, scaledSize, level);
-				tcol.addGroup(Game::groupColliders);
-			}
-			mapFile.get(c);
-			if (c == '1') {
-				auto& tcol(manager.addEntity());
-				tcol.addComponent<ColliderComponent>("terrain", x * scaledSize, (y + 1) * scaledSize, scaledSize + scaledSize / 5, scaledSize / 5, level);
-				tcol.addGroup(Game::groupColliders);
-			}
-			mapFile.ignore();
-		}
-	}
-
-	mapFile.close();
 }
 
 void Map::AddTile(int srcX, int srcY, int xpos, int ypos) {
@@ -82,22 +89,21 @@ void Map::AddTile(int srcX, int srcY, int xpos, int ypos) {
 	tile.addGroup(Game::groupMap);
 }
 
-Maze::Maze(const int n, const int m, std::string path, int p_level) {
+//
+// Maze implementation
+//
 
-	window = SDL_CreateWindow("Expert System", 0, 50, 800, 952, SDL_WINDOW_SHOWN);
-	renderer = SDL_CreateRenderer(window, -1, 0);
-	SDL_Init(SDL_INIT_VIDEO);
-	level = p_level;
+Maze::Maze(const int n, const int m) {
+
 	rows = n;
 	cols = m;
-	mazePath = path;
+
 	visited.resize(rows * cols);
 	fill(visited.begin(), visited.end(), false);
 
 	adjList.resize(rows * cols);
 	grid.resize(rows * cols);
 
-	escape.resize(2);
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
 			grid[this->getInd(i, j)].maze = this;
@@ -109,7 +115,6 @@ Maze::Maze(const int n, const int m, std::string path, int p_level) {
 
 Maze::~Maze() {}
 
-
 int Maze::getInd(int i, int j) {
 	if (i != -1 && i != rows + 1 && j != -1 && j != cols + 1) {
 		return i * cols + j;
@@ -118,7 +123,6 @@ int Maze::getInd(int i, int j) {
 		return -1;
 	}
 }
-
 
 bool Maze::visCheck(int i, int j) {
 	return visited[this->getInd(i, j)];
@@ -170,26 +174,21 @@ void Maze::generation() {
 			stack_cell.push(next);
 		}
 	}
+	sword_ind = 46 + (rand() % 45);
+	grid[sword_ind].sword = true;
+	grid[sword_ind].indent = 0;
 
-	elev_ind = 46 + (rand() % 45);
-	carg_ind = 91 + (rand() % 45);
-	com_ind = 136 + (rand() % 45);
-
-	grid[elev_ind].elev = true;
-	grid[elev_ind].indent = 1;
-
-	grid[lab_ind].lab = true;
-	grid[lab_ind].indent = 3;
+	map_ind = 91 + (rand() % 45);
+	grid[map_ind].map = true;
+	grid[map_ind].indent = 0;
 	
-	grid[carg_ind].carg = true;
-	grid[carg_ind].indent = 4;
-	
-	grid[com_ind].com = true;
-	grid[com_ind].indent = 5;
-	
+	lad_ind = 146 + (rand() % 45);
+	grid[lad_ind].lad = true;
+	grid[lad_ind].indent = 1;
 }
 
-void Maze::BFS(int start) {
+void Maze::BFS() {
+	int start = startNode;
 	fill(visited.begin(), visited.end() - 1, false);
 	std::queue<int> order;
 
@@ -212,7 +211,7 @@ void Maze::BFS(int start) {
 
 void Maze::findPath() {
 
-	int cur = elev_ind;
+	int cur = lad_ind;
 	while (cur != startNode) {
 		for (std::vector<int>::iterator it = adjList[cur].begin(); it != adjList[cur].end(); it++) {
 			if (distance[*it] - distance[cur] == -1) {
@@ -226,7 +225,6 @@ void Maze::findPath() {
 	reverse(escape.begin(), escape.end());
 }
 
-
 void Maze::clear() {
 	for (int i = 0; i < rows * cols; i++) {
 		grid[i].null();
@@ -235,9 +233,18 @@ void Maze::clear() {
 		adjList[i].clear();
 	}
 	escape.clear();
+	mino_path.clear();
 }
 
-void Maze::renderMaze() {
+void Maze::unvis() {
+	fill(visited.begin(), visited.end() - 1, false);
+}
+
+/*void Maze::renderMaze() {
+
+	window = SDL_CreateWindow("Expert System", 0, 50, 800, 952, SDL_WINDOW_SHOWN);
+	renderer = SDL_CreateRenderer(window, -1, 0);
+	SDL_Init(SDL_INIT_VIDEO);
 
 	SDL_Rect frame;
 	frame.x = 25;
@@ -297,34 +304,25 @@ void Maze::renderMaze() {
 		SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
 	}
 
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	TTF_Init();
-	char text[10] = "Level : ";
-	char char_level = static_cast<char>(level + 48);
-	level--;
-	TTF_Font* outFont = TTF_OpenFont("C:/Users/Denis/AppData/Local/Microsoft/Windows/Fonts/8bitOperatorPlus8-Regular.ttf", 32);
-	text[8] = char_level;
-	SDL_Color White = { 255, 255, 255, SDL_ALPHA_OPAQUE };
-	SDL_Surface* surfaceText = TTF_RenderText_Solid(outFont, text, White);
-	SDL_Texture* textureText = SDL_CreateTextureFromSurface(renderer, surfaceText);
-	SDL_FreeSurface(surfaceText);
-
-	SDL_Rect textRect;
-	textRect.x = 25;
-	textRect.y = 800;
-	textRect.w = 300;
-	textRect.h = 100;
-
-	SDL_RenderCopy(renderer, textureText, NULL, &textRect);
-
 	SDL_RenderPresent(renderer);
-}
+}*/
 
+void Maze::DFS(int mino, int par) {
+	if (visited[mino]) {
+		//mino_path.push_back(mino);
+		return;
+	}
+	visited[mino] = true;
+	mino_path.push_back(mino);
+	for (auto next : adjList[mino]) {
+		DFS(next, mino);
+	}
+	mino_path.push_back(par);
+}
 
 ///
 /// Cell implementation
 ///
-
 
 Cell::Cell(int p_i, int p_j) {
 	i = p_i;
@@ -370,10 +368,8 @@ void Cell::null() {
 	bottom = true;
 	right = true;
 
-	elev = false;
 	lad = false;
-	lab = false;
-	carg = false;
-	com = false;
+	map = false;
+	sword = false;
 	indent = 0;
 }

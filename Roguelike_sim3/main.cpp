@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 	//creating and initializing game
 
 	game = new Game;
-	game->init("Simulation", 900, 50, 972, 972, false);
+	game->init("Simulation", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, false);
 
 	//main game loop
 	while (game->running()) {

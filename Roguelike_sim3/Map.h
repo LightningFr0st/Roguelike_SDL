@@ -1,4 +1,7 @@
 #pragma once
+#include "ECS.h"
+#include "SDL.h"
+#include "SDL_image.h"
 #include <vector>
 #include <string>
 #include <fstream>
@@ -20,33 +23,24 @@ struct Cell {
 	bool right = true;
 
 	//special 
-	bool elev = false;
 	bool lad = false;
-	bool lab = false;
-	bool carg = false;
-	bool com = false;
-
+	bool map = false;
+	bool sword = false;
 	int indent = 0;
 
 	Cell() = default;
-
 	Cell(int p_i, int p_j);
-	
 	Cell* getNext(std::vector<Cell>& p_grid);
-
 	void null();
 };
 
 class Maze {
 private:
-
 	SDL_Window* window = nullptr;
 	SDL_Renderer* renderer = nullptr;
 
 	int cols;
 	int rows;
-
-	std::string mazePath;
 
 	//vectors for calcs
 	std::vector<bool> visited; //+
@@ -55,44 +49,31 @@ private:
 	std::vector<std::vector<int>> adjList; //+
 
 public:
-
 	int level;
-
 	int startNode;
-
-	int elev_ind;
 	int lad_ind;
-	int carg_ind;
-	int com_ind;
-	int lab_ind;
-
+	int map_ind;
+	int sword_ind;
 
 	std::vector<Cell> grid;
 	std::vector<int> escape;
+	std::vector<int> mino_path;
 
-	Maze() {};
-
-	Maze(const int n, const int m, std::string path, int p_level);
-	
+	Maze(const int n, const int m);
 	~Maze();
 
 	int getRows() { return rows; };
 	int getCols() { return cols; };
-
 	int getInd(int i, int j);
-	
 	bool visCheck(int i, int j);
-	
 	void remWalls(Cell* prev, Cell* next);
-	
+
 	void generation();
-	
-	void BFS(int start);
-	
+	void BFS();
+	void DFS(int mino, int par);
 	void findPath();
-
 	void clear();
-
+	void unvis();
 	void renderMaze();
 };
 
@@ -101,8 +82,10 @@ public:
 	Map(const char* mapfile, int mscale, int tilesize);
 	~Map();
 	
-	void LoadMap(std::string path, int sizeX, int sizeY, int p_level);
+	void LoadMap(int sizeX, int sizeY);
+	void LoadPath();
 	void AddTile(int srcX, int srcY, int xpos, int ypos);
+	Maze* maze_map;
 
 private:
 	const char* mapfilePath;
@@ -110,6 +93,5 @@ private:
 	int tileSize;
 	int scaledSize;
 	int level;
-	Maze maze_map;
 };
 
