@@ -240,76 +240,9 @@ void Maze::unvis() {
 	fill(visited.begin(), visited.end() - 1, false);
 }
 
-/*void Maze::renderMaze() {
-
-	window = SDL_CreateWindow("Expert System", 0, 50, 800, 952, SDL_WINDOW_SHOWN);
-	renderer = SDL_CreateRenderer(window, -1, 0);
-	SDL_Init(SDL_INIT_VIDEO);
-
-	SDL_Rect frame;
-	frame.x = 25;
-	frame.y = 25;
-	frame.w = 750;
-	frame.h = 750;
-
-	SDL_Rect cell;
-	cell.w = 40;
-	cell.h = 40;
-
-	int width = 50;
-
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-
-	// Celar the screen
-
-	SDL_RenderClear(renderer);
-
-	// Draw the maze
-
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	SDL_RenderDrawRect(renderer, &frame);
-
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			int ind = getInd(i, j);
-
-			if (grid[ind].right) {
-				SDL_RenderDrawLine(renderer, (j + 1) * width + 25, i * width + 25,
-					(j + 1) * width + 25, (i + 1) * width + 25);
-			}
-
-			if (grid[ind].bottom) {
-				SDL_RenderDrawLine(renderer, j * width + 25, (i + 1) * width + 25,
-					(j + 1) * width + 25, (i + 1) * width + 25);
-			}
-
-			if (grid[ind].elev || grid[ind].lad) {
-				cell.x = (j * 50) + 30;
-				cell.y = (i * 50) + 30;
-				SDL_RenderDrawRect(renderer, &cell);
-			}
-		}
-	}
-
-	//Draw the path
-
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-	for (int i = 1; i < escape.size(); i++) {
-		int x1 = grid[escape[i - 1]].j * width + 25, y1 = grid[escape[i - 1]].i * width + 25;
-		int x2 = grid[escape[i]].j * width + 25, y2 = grid[escape[i]].i * width + 25;
-		x1 = (x1 + x1 + width) / 2;
-		y1 = (y1 + y1 + width) / 2;
-		x2 = (x2 + x2 + width) / 2;
-		y2 = (y2 + y2 + width) / 2;
-		SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
-	}
-
-	SDL_RenderPresent(renderer);
-}*/
 
 void Maze::DFS(int mino, int par) {
 	if (visited[mino]) {
-		//mino_path.push_back(mino);
 		return;
 	}
 	visited[mino] = true;

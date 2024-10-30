@@ -36,8 +36,3 @@ int main(int argc, char* argv[]) {
 	std::cout << "You Win!";
 	return 0;
 }
-
-//1 level - black
-//2 level - gray
-//3 level - green
-//4 level - red

@@ -80,7 +80,7 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
 
 	//initializing player
 	player.addComponent<TransformComponent>(50, 50, 32, 37, 2);
-	player.getComponent<TransformComponent>().speed = 10;
+	player.getComponent<TransformComponent>().speed = 5;
 	player.addComponent<SpriteComponent>("assets/ext_animations.png", true, "player");
 	player.addComponent<ColliderComponent>("player");
 	player.addComponent<KeyboardController>();
@@ -94,16 +94,6 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
 	enemy.getComponent<AIComponent>().init_path(map->maze_map->mino_path);
 	enemy.addGroup(groupEnemies);
 
-
-	/*sword.addComponent<TransformComponent>(60, 60, 32, 32, 1);
-	sword.addComponent<SpriteComponent>("assets/sword.png", false);
-	sword.addComponent<ColliderComponent>("sword");
-	sword.addGroup(groupColliders);
-
-	lab_map.addComponent<TransformComponent>(188, 60, 32, 32, 1);
-	lab_map.addComponent<SpriteComponent>("assets/map.png", false);
-	lab_map.addComponent<ColliderComponent>("map");
-	lab_map.addGroup(groupColliders);*/
 }
 
 auto& players(manager.getGroup(Game::groupPlayers));
@@ -126,19 +116,19 @@ void Game::handleEvents() {
 }
 
 void Game::update() {
-	SDL_Rect playerCol = player.getComponent<ColliderComponent>().collider;
 	Vector2D playerPos = player.getComponent<TransformComponent>().position;
+	SDL_Rect playerCol = player.getComponent<ColliderComponent>().collider;
 	colliders = manager.getGroup(Game::groupColliders);
 	enemies = manager.getGroup(Game::groupEnemies);
+	res = false;
 	manager.refresh();
 	manager.update();
-	res = false;
+	
 
 	for (auto& c : colliders) {
 		SDL_Rect cCol = c->getComponent<ColliderComponent>().collider;
 		if (Collision::AABB(cCol, playerCol)) {
 			std::string type = c->getComponent<ColliderComponent>().tag;
-			std::cout << "player hit : " << type << '\n';
 			if (type == "ladder") {
 				restart();
 				res = true;
@@ -163,7 +153,6 @@ void Game::update() {
 			SDL_Rect cCol = c->getComponent<ColliderComponent>().collider;
 			if (Collision::AABB(cCol, playerCol)) {
 				std::string type = c->getComponent<ColliderComponent>().tag;
-				std::cout << "player hit : " << type << '\n';
 				if (type == "enemy") {
 					if (sword_taken) {
 						player.getComponent<SpriteComponent>().Play("Attack");
@@ -289,16 +278,16 @@ void Game::Lose() {
 	SDL_FreeSurface(surfaceText);
 	SDL_Rect textRect;
 	
-	textRect.x = 800;
+	textRect.x = 760;
 	textRect.y = 540;
 	textRect.w = 300;
 	textRect.h = 100;
 
 	SDL_RenderCopy(renderer, textureText1, NULL, &textRect);
 
-	textRect.x = 800;
+	textRect.x = 760;
 	textRect.y = 740;
-	textRect.w = 300;
+	textRect.w = 500;
 	textRect.h = 100;
 
 	SDL_RenderCopy(renderer, textureText2, NULL, &textRect);

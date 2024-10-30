@@ -36,8 +36,6 @@ struct Cell {
 
 class Maze {
 private:
-	SDL_Window* window = nullptr;
-	SDL_Renderer* renderer = nullptr;
 
 	int cols;
 	int rows;
@@ -49,7 +47,6 @@ private:
 	std::vector<std::vector<int>> adjList; //+
 
 public:
-	int level;
 	int startNode;
 	int lad_ind;
 	int map_ind;
@@ -74,7 +71,6 @@ public:
 	void findPath();
 	void clear();
 	void unvis();
-	void renderMaze();
 };
 
 class Map {
@@ -92,6 +88,5 @@ private:
 	int mapScale;
 	int tileSize;
 	int scaledSize;
-	int level;
 };
 
